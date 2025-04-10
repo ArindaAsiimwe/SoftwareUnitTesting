@@ -1,0 +1,107 @@
+package edu.sc.bse3211.meetingplanner;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PlannerTest {
+
+    @SuppressWarnings("unused")
+    private Person martha, collins, brenda, julius, lynn;
+    private Room room;
+    private ArrayList<Person> attendees;
+
+    @BeforeEach
+    public void setUp() {
+        martha = new Person("Namugga Martha");
+        collins = new Person("Shema Collins");
+        brenda = new Person("Acan Brenda");
+        julius = new Person("Kazibwe Julius");
+        lynn = new Person("Kukunda Lynn");
+
+        room = new Room();
+        attendees = new ArrayList<>();
+    }
+
+    @Test
+    public void testValidVacationBooking() throws Exception {
+        attendees.add(martha);
+        Meeting vacation = new Meeting(5, 15, 0, 23, attendees, room, "vacation");
+        martha.addMeeting(vacation);
+
+        assertTrue(martha.isBusy(5, 15, 0, 23));
+        assertEquals("vacation", martha.getMeeting(5, 15, 0).getDescription());
+    }
+
+    @Test
+    public void testInvalidVacationBooking() throws Exception {
+        attendees.add(collins);
+        Meeting existing = new Meeting(6, 10, 10, 12, attendees, room, "Team Meeting");
+        collins.addMeeting(existing);
+
+        Meeting vacation = new Meeting(6, 10, 0, 23, attendees, room, "vacation");
+
+        assertThrows(TimeConflictException.class, () -> {
+            collins.addMeeting(vacation);
+        });
+    }
+
+    @Test
+    public void testVacationWithZeroDuration() {
+        attendees.add(brenda);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Meeting(8, 5, 10, 10, attendees, room, "vacation");
+        });
+    }
+
+    @Test
+    public void testVacationForNonExistenceEmployee() {
+        Organization organization = new Organization();
+
+        @SuppressWarnings("unused")
+        Exception exception = assertThrows(Exception.class, () -> {
+            organization.getEmployee("Philly");
+        });
+    }
+
+    @Test
+    public void testVacationOnInvalidDate() {
+        attendees.add(brenda);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Meeting(4, 31, 0, 23, attendees, room, "vacation");
+        });
+    }
+
+    // Vacation in the past
+    @Test
+    public void testVacationInThePast() {
+        attendees.add(martha);
+        // Assume today's date is after May 15th
+        Meeting vacation = new Meeting(5, 15, 0, 23, attendees, room, "vacation");
+        assertThrows(IllegalArgumentException.class, () -> {
+            martha.addMeeting(vacation);
+        });
+    }
+
+    // Vacation with start time after end time
+    @Test
+    public void testVacationStartAfterEnd() {
+        attendees.add(brenda);
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Meeting(8, 5, 12, 10, attendees, room, "vacation");
+        });
+    }
+
+    // Vacation with negative duration
+    @Test
+    public void testVacationWithNegativeDuration() {
+        attendees.add(brenda);
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Meeting(8, 5, 10, 9, attendees, room, "vacation");
+        });
+    }
+}
