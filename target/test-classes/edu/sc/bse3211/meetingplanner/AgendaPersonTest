@@ -1,0 +1,87 @@
+package edu.sc.bse3211.meetingplanner;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+
+public class AgendaPersonTest {
+    private Person person;
+    private Room room;
+    private ArrayList<Person> attendees;
+
+    @BeforeEach
+    public void setUp() {
+        person = new Person("Test User");
+        room = new Room("LLT6A");
+        attendees = new ArrayList<>();
+        attendees.add(person);
+    }
+
+    // Normal Cases
+
+    @Test
+    public void testPrintAgenda_MeetingsOnly() throws TimeConflictException {
+        Meeting meeting = new Meeting(6, 15, 10, 12, attendees, room, "Team Sync");
+        person.addMeeting(meeting);
+
+        String agenda = person.printAgenda(6, 15);
+        assertTrue(agenda.contains("Team Sync"));
+        assertTrue(agenda.contains("10:00-12:00"));
+    }
+
+    @Test
+    public void testPrintAgenda_VacationOnly() throws TimeConflictException {
+        Meeting vacation = new Meeting(6, 20, 0, 23, attendees, room, "vacation");
+        person.addMeeting(vacation);
+
+        String agenda = person.printAgenda(6, 20);
+        assertTrue(agenda.contains("vacation"));
+        assertTrue(agenda.contains("All day"));
+    }
+
+    @Test
+    public void testPrintAgenda_MixedActivities() throws TimeConflictException {
+        // Add a meeting
+        Meeting meeting = new Meeting(6, 10, 14, 15, attendees, room, "Standup");
+        person.addMeeting(meeting);
+
+        // Add vacation
+        Meeting vacation = new Meeting(6, 10, 0, 23, attendees, room, "vacation");
+        person.addMeeting(vacation);
+
+        String agenda = person.printAgenda(6, 10);
+        assertTrue(agenda.contains("Standup"));
+        assertTrue(agenda.contains("vacation"));
+    }
+
+    // Edge Cases
+
+    @Test
+    public void testPrintAgenda_NonExistentPerson() {
+        Organization org = new Organization();
+        assertThrows(Exception.class, () -> {
+            org.getEmployee("Nonexistent Person");
+        });
+    }
+
+    @Test
+    public void testPrintAgenda_InvalidDateRange() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            person.printAgenda(2, 30); // February 30th
+        });
+    }
+
+    @Test
+    public void testPrintAgenda_StartAfterEnd() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            // person.printAgenda(0, 0)(6, 15, 6, 10); // June 15 to June 10
+        });
+    }
+
+    @Test
+    public void testPrintAgenda_PastDates() {
+        String agenda = person.printAgenda(1);
+        assertNotNull(agenda);
+    }
+}
